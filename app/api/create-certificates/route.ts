@@ -12,6 +12,11 @@ const leadName = "Head";
 const title = "Student Body Chapter";
 const teamName = "CSI";
 
+interface UpdateObj {
+  row: number;
+  slideId: string;
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
   const token = body.token;
@@ -68,7 +73,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const updates: any[] = [];
+  const updates: UpdateObj[] = [];
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i];
@@ -80,7 +85,7 @@ export async function POST(req: NextRequest) {
 
     console.log(`Processing row ${i + 1}:`, { name, date, description });
 
-    // Copy slide
+    // Copy slide -- being done
     const copy = await drive.files.copy({
       fileId: SLIDE_TEMPLATE_ID,
       requestBody: {

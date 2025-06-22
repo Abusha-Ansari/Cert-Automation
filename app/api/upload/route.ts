@@ -5,6 +5,13 @@ import { getOAuth2Client } from '@/lib/googleOAuthClient';
 const SPREADSHEET_ID = '1s4LDoS2t9JxJGGp4rYe54XA7QEcR2REA5geIpMYPXzY';
 const SHEET_NAME = 'Sheet1';
 
+interface BodyData {
+  accessToken: string;
+  refreshToken: string;
+  loggedIn: boolean;
+  [key: string]: string | boolean | undefined;
+}
+
 export async function POST(req: NextRequest) {
   try {
     const accessToken = req.cookies.get('access_token')?.value;
@@ -15,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const data: any[] = body.data;
+    const data: BodyData[] = body.data;
 
     if (!Array.isArray(data) || data.length === 0) {
       return NextResponse.json({ error: 'No data provided' }, { status: 400 });
@@ -47,8 +54,7 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ message: 'Data uploaded to Google Sheet successfully' });
-  } catch (err: any) {
-    console.error('Upload Error:', err);
-    return NextResponse.json({ error: err.message || 'Unknown error' }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: 'Unknown error' }, { status: 500 });
   }
 }

@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 interface TokenData {
   accessToken: string;
   refreshToken: string;
-  loggedIn: Boolean;
+  loggedIn: boolean;
 }
 
 export default function Home() {
