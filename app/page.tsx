@@ -47,15 +47,6 @@ export default function Home() {
       
   }, []);
 
-  // setTimeout(() => {
-  //   console.log("Current Sheet Name:", sheetName);
-  //   console.log("Current Event Name:", eventName);
-  //   console.log("Temporary Folder ID:", tempFolderId);
-  //   console.log("Slide Template ID:", slideTemplateId);
-  //   console.log("Spreadsheet ID:", spreadsheetId);
-
-  // }, 3000);
-
   const startAuth = () => {
     window.location.href = "/api/auth/start";
   };
@@ -104,9 +95,6 @@ export default function Home() {
           Authorize with Google to create, upload, and send certificates.
         </p>
       </div>
-    <button onClick={handleSend} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow">
-      click to test send
-    </button>
       {!loggedIn ? (
         <button
           onClick={startAuth}
