@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { google } from "googleapis";
 import { getOAuth2Client } from "@/lib/googleOAuthClient";
-// import { getOAuth2Client } from '@/lib/googleOAuthClient';
-
-const SLIDE_TEMPLATE_ID = "11p17qjEJe82i0biVCiw3-xld7cZGBqy2wegqjFmXRe8";
-const SPREADSHEET_ID = "1s4LDoS2t9JxJGGp4rYe54XA7QEcR2REA5geIpMYPXzY";
-const TEMP_FOLDER_ID = "1_aJB64-w7yCBESQveb4sc8wjSNK8ISGf";
-const SHEET_NAME = "Sheet1";
 
 const leadName = "Head";
 const title = "Student Body Chapter";
@@ -18,9 +12,14 @@ interface UpdateObj {
 }
 
 export async function POST(req: NextRequest) {
+
   const body = await req.json();
+
   const token = body.token;
-  console.log("Tokens received:", token);
+  const SHEET_NAME = body.sheet_name;
+  const SLIDE_TEMPLATE_ID = body.slide_template_id;
+  const TEMP_FOLDER_ID = body.temp_folder_id;
+  const SPREADSHEET_ID = body.sheet_ID;
 
   if (!token) {
     return NextResponse.json({ error: "Missing tokens" }, { status: 400 });

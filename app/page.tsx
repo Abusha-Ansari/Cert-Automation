@@ -11,6 +11,11 @@ interface TokenData {
 export default function Home() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [token, setToken] = useState<TokenData | null>(null);
+  const [sheetName, setSheetName] = useState('');
+  const [eventName, setEventName] = useState('');
+  const [tempFolderId, setTempFolderId] = useState('');
+  const [slideTemplateId, setSlideTemplateId] = useState('');
+  const [spreadsheetId, setSpreadsheetId] = useState('');
 
   const [loading, setLoading] = useState({
     upload: false,
@@ -26,7 +31,30 @@ export default function Home() {
         setToken(data);
       })
       .catch(() => setLoggedIn(false));
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const sheet = urlParams.get("sheet");
+      const event = urlParams.get("event");
+      const tempFolder = urlParams.get("tempFolder");
+      const slideTemplate = urlParams.get("slideTemplate");
+      const sheetId = urlParams.get("sheetId");
+
+      if (sheet) setSheetName(sheet);
+      if (event) setEventName(event);
+      if (tempFolder) setTempFolderId(tempFolder);
+      if (slideTemplate) setSlideTemplateId(slideTemplate);
+      if (sheetId) setSpreadsheetId(sheetId);
+      
   }, []);
+
+  // setTimeout(() => {
+  //   console.log("Current Sheet Name:", sheetName);
+  //   console.log("Current Event Name:", eventName);
+  //   console.log("Temporary Folder ID:", tempFolderId);
+  //   console.log("Slide Template ID:", slideTemplateId);
+  //   console.log("Spreadsheet ID:", spreadsheetId);
+
+  // }, 3000);
 
   const startAuth = () => {
     window.location.href = "/api/auth/start";
@@ -38,7 +66,7 @@ export default function Home() {
     const res = await fetch("/api/create-certificates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, "sheet_name": sheetName, "event_name": eventName, "temp_folder_id": tempFolderId, "slide_template_id": slideTemplateId, "sheet_ID": spreadsheetId }),
     });
     const result = await res.json();
     setLoading((l) => ({ ...l, create: false }));
@@ -49,59 +77,24 @@ export default function Home() {
   const handleSend = async () => {
     if (!loggedIn) return alert("Please authorize with Google first");
     setLoading((l) => ({ ...l, send: true }));
+
+    if (!sheetName || !eventName) {
+      return alert("Please provide both sheet name and event name in the URL parameters.");
+    }
+    console.log("Sending certificates for sheet:", sheetName, "and event:", eventName);
+
     const res = await fetch("/api/send-certificates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
+      body: JSON.stringify({ token, "sheet_name": sheetName, "event_name": eventName, "sheet_ID": spreadsheetId }),
     });
+
     const result = await res.json();
     setLoading((l) => ({ ...l, send: false }));
+
     if (!res.ok || result.error) return alert(`❌ ${result.error}`);
     alert("✅ Certificates sent!");
-  };
-
-  const handleUpload = async () => {
-    if (!loggedIn) return alert("Please authorize with Google first");
-    setLoading((l) => ({ ...l, upload: true }));
-
-    const sampleData = [
-      {
-        Name: "Abusha",
-        Email: "soulknight130@gmail.com",
-        Date: "2025-06-17",
-        Description: "completed the event",
-        "Slide ID": "",
-        Status: "",
-      },
-      {
-        Name: "Shreyash",
-        Email: "shreyashbansod72@gmail.com",
-        Date: "2025-06-17",
-        Description: "abusha ne bheja hai",
-        "Slide ID": "",
-        Status: "",
-      },
-      {
-        Name: "Purva",
-        Email: "purvakokate07@gmail.com",
-        Date: "2025-06-17",
-        Description: "testing certificate",
-        "Slide ID": "",
-        Status: "",
-      },
-    ];
-
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ data: sampleData }),
-    });
-
-    const result = await res.json();
-    setLoading((l) => ({ ...l, upload: false }));
-    if (!res.ok || result.error) return alert(`❌ ${result.error}`);
-    alert("✅ Uploaded to Google Sheet!");
-  };
+  }; 
 
   return (
     <main className="min-h-screen bg-gray-50 dark:bg-black text-gray-800 dark:text-white px-6 py-10 flex flex-col items-center gap-6">
@@ -111,7 +104,9 @@ export default function Home() {
           Authorize with Google to create, upload, and send certificates.
         </p>
       </div>
-
+    <button onClick={handleSend} className="bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg text-sm font-semibold shadow">
+      click to test send
+    </button>
       {!loggedIn ? (
         <button
           onClick={startAuth}
@@ -135,12 +130,6 @@ export default function Home() {
           loading={loading.send}
           disabled={!loggedIn}
           label="Send Certificates"
-        />
-        <ActionButton
-          onClick={handleUpload}
-          loading={loading.upload}
-          disabled={!loggedIn}
-          label="Upload to Google Sheet"
         />
       </div>
     </main>

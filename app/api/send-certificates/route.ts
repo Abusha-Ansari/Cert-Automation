@@ -3,15 +3,19 @@ import { google } from 'googleapis';
 import { getOAuth2Client } from '@/lib/googleOAuthClient';
 import nodemailer from 'nodemailer';
 
-const SPREADSHEET_ID = '1s4LDoS2t9JxJGGp4rYe54XA7QEcR2REA5geIpMYPXzY';
-const SHEET_NAME = 'Sheet1';
-const EVENT_NAME = 'TESTING EVENT';
 
 export async function POST(req: NextRequest) {
-  const body = await req.json();
-  const token = body.token;
 
-  console.log('Tokens received from send-cert:', token);
+  const body = await req.json();
+
+  const token = body.token;
+  const SHEET_NAME = body.sheet_name;
+  const EVENT_NAME = body.event_name;
+  const SPREADSHEET_ID = body.sheet_ID;
+
+  if (!SHEET_NAME || !EVENT_NAME || !SPREADSHEET_ID) {
+    return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
+  }
 
   if (!token) {
     return NextResponse.json({ error: 'Missing tokens' }, { status: 400 });
