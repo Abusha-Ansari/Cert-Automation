@@ -36,6 +36,29 @@ export async function POST(req: NextRequest) {
 
   const slides = google.slides({ version: "v1", auth: oauth2Client });
 
+  if (body.delete_old && TEMP_FOLDER_ID) {
+  try {
+    const existingFiles = await drive.files.list({
+      q: `'${TEMP_FOLDER_ID}' in parents and trashed = false`,
+      fields: "files(id, name)",
+    });
+
+    const deletePromises = (existingFiles.data.files || []).map((file) =>
+      drive.files.delete({ fileId: file.id! })
+    );
+
+    await Promise.all(deletePromises);
+    console.log(`✅ Deleted ${deletePromises.length} existing certificate(s)`);
+  } catch (error) {
+    console.error("❌ Failed to delete old certificates:", error);
+    return NextResponse.json(
+      { error: "Failed to delete old certificates" },
+      { status: 500 }
+    );
+  }
+}
+
+
   // Fetch sheet data
   const sheetData = await sheets.spreadsheets.values.get({
     spreadsheetId: SPREADSHEET_ID,
