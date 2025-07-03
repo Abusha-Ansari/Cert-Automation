@@ -108,13 +108,21 @@ export default function Home() {
 
       <div className="flex flex-col gap-4 w-full max-w-sm mt-4">
         <ActionButton
-          onClick={handleCreate}
+          onClick={() => {
+            if (window.confirm("Are you sure you want to CREATE certificates?")) {
+              handleCreate();
+            }
+          }}
           loading={loading.create}
           disabled={!loggedIn}
           label="Create Certificates"
         />
         <ActionButton
-          onClick={handleSend}
+          onClick={() => {
+            if(window.confirm("Are you sure you want to SEND certificates?")) {
+              handleSend();
+            }
+          }}
           loading={loading.send}
           disabled={!loggedIn}
           label="Send Certificates"
