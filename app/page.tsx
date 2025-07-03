@@ -57,7 +57,7 @@ export default function Home() {
     const res = await fetch("/api/create-certificates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token, "sheet_name": sheetName, "event_name": eventName, "temp_folder_id": tempFolderId, "slide_template_id": slideTemplateId, "sheet_ID": spreadsheetId }),
+      body: JSON.stringify({ token, "sheet_name": sheetName, "event_name": eventName, "temp_folder_id": tempFolderId, "slide_template_id": slideTemplateId, "sheet_ID": spreadsheetId, delete_old: true }),
     });
     const result = await res.json();
     setLoading((l) => ({ ...l, create: false }));
