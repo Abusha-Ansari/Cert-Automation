@@ -268,6 +268,8 @@ export default function CertificateDashboard() {
           spreadsheetId,
         });
 
+        if(!authData.loggedIn) { setTotalParticipants(0); return; }
+
         const res = await fetch("/api/get-sheet-data", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
