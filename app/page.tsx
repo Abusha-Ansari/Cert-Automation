@@ -226,7 +226,7 @@ export default function CertificateDashboard() {
   });
 
   const [loading, setLoading] = useState({ create: false, send: false });
-  const [totalParticipants, setTotalParticipants] = useState<number>(0);
+  const [totalParticipants, setTotalParticipants] = useState<number>(-1);
   const [totalCreated, settotalCreated] = useState<number>(0);
   const [totalSent, setTotalSent] = useState<number>(0);
 
@@ -302,7 +302,7 @@ export default function CertificateDashboard() {
     init();
   }, []);
 
-  if (!totalParticipants) {
+  if (totalParticipants === -1) {
     return (
       <div
         style={{
