@@ -255,6 +255,7 @@ export default function CertificateDashboard() {
           alert(
             "❗ Please provide all required parameters in the URL."
           );
+          setTotalParticipants(0);
           return;
         }
 
