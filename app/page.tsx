@@ -251,9 +251,9 @@ export default function CertificateDashboard() {
           slideTemplateId &&
           spreadsheetId;
 
-        if (!allParamsExist || !authData.loggedIn) {
+        if (!allParamsExist) {
           alert(
-            "❗ Please provide all required parameters in the URL and connect your Google account."
+            "❗ Please provide all required parameters in the URL."
           );
           return;
         }
