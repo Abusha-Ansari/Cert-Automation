@@ -190,82 +190,180 @@ const StatCard = ({ title, value, icon: Icon }: StatCardProps) => (
   </div>
 );
 
+const spinnerStyle: React.CSSProperties = {
+  width: "3rem",
+  height: "3rem",
+  border: "4px solid #ccc",
+  borderTop: "4px solid #6366F1", // Indigo color for accent
+  borderRadius: "50%",
+  animation: "spin 1s linear infinite",
+};
+
+const spinKeyframes = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+
 interface TokenData {
   accessToken: string;
   refreshToken: string;
   loggedIn: boolean;
 }
 
+// import { useEffect, useState } from "react";
+
 export default function CertificateDashboard() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [token, setToken] = useState<TokenData | null>(null);
-  const [sheetName, setSheetName] = useState("");
-  const [eventName, setEventName] = useState("");
-  const [tempFolderId, setTempFolderId] = useState("");
-  const [slideTemplateId, setSlideTemplateId] = useState("");
-  const [spreadsheetId, setSpreadsheetId] = useState("");
+  const [state, setState] = useState({
+    loggedIn: false,
+    token: null as TokenData | null,
+    sheetName: "",
+    eventName: "",
+    tempFolderId: "",
+    slideTemplateId: "",
+    spreadsheetId: "",
+  });
+
   const [loading, setLoading] = useState({ create: false, send: false });
+  const [totalParticipants, setTotalParticipants] = useState<number>(0);
+  const [totalCreated, settotalCreated] = useState<number>(0);
+  const [totalSent, setTotalSent] = useState<number>(0);
 
   useEffect(() => {
-    fetch("/api/auth/status")
-      .then((res) => res.json())
-      .then((data) => {
-        setLoggedIn(data.loggedIn);
-        setToken(data);
-      })
-      .catch(() => setLoggedIn(false));
+    const init = async () => {
+      try {
+        const authRes = await fetch("/api/auth/status");
+        const authData = await authRes.json();
 
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get("sheet")) setSheetName(urlParams.get("sheet") || "");
-    if (urlParams.get("event")) setEventName(urlParams.get("event") || "");
-    if (urlParams.get("tempFolder"))
-      setTempFolderId(urlParams.get("tempFolder") || "");
-    if (urlParams.get("slideTemplate"))
-      setSlideTemplateId(urlParams.get("slideTemplate") || "");
-    if (urlParams.get("sheetId"))
-      setSpreadsheetId(urlParams.get("sheetId") || "");
+        const urlParams = new URLSearchParams(window.location.search);
+
+        const sheetName = urlParams.get("sheet") || "";
+        const eventName = urlParams.get("event") || "";
+        const tempFolderId = urlParams.get("tempFolder") || "";
+        const slideTemplateId = urlParams.get("slideTemplate") || "";
+        const spreadsheetId = urlParams.get("sheetId") || "";
+
+        const allParamsExist =
+          sheetName &&
+          eventName &&
+          tempFolderId &&
+          slideTemplateId &&
+          spreadsheetId;
+
+        if (!allParamsExist || !authData.loggedIn) {
+          alert(
+            "❗ Please provide all required parameters in the URL and connect your Google account."
+          );
+          return;
+        }
+
+        setState({
+          loggedIn: authData.loggedIn,
+          token: authData,
+          sheetName,
+          eventName,
+          tempFolderId,
+          slideTemplateId,
+          spreadsheetId,
+        });
+
+        const res = await fetch("/api/get-sheet-data", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: authData,
+            sheet_name: sheetName,
+            event_name: eventName,
+            temp_folder_id: tempFolderId,
+            slide_template_id: slideTemplateId,
+            sheet_ID: spreadsheetId,
+            delete_old: true,
+          }),
+        });
+
+        const result = await res.json();
+
+        if (!res.ok || result.error) {
+          console.error("Error fetching sheet data:", result.error);
+          alert("Failed to fetch participant data.");
+          return;
+        }
+
+        setTotalParticipants(result.data.length - 1);
+      } catch (error) {
+        console.error("Initialization failed:", error);
+        alert("An error occurred during initialization.");
+      }
+    };
+
+    init();
   }, []);
+
+  if (!totalParticipants) {
+    return (
+      <div
+        style={{
+          ...layoutStyle,
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+          flexDirection: "column",
+        }}
+      >
+        {/* Inject keyframes */}
+        <style>{spinKeyframes}</style>
+
+        <div style={spinnerStyle}></div>
+        <h2 style={{ marginTop: "1rem", color: "#9CA3AF" /* text-gray-400 */ }}>
+          Loading & fetching sheet data...
+        </h2>
+      </div>
+    );
+  }
 
   const startAuth = () => (window.location.href = "/api/auth/start");
 
   const handleCreate = async () => {
-    if (!loggedIn) return alert("Please authorize with Google first");
+    if (!state.loggedIn) return alert("Please authorize with Google first");
     setLoading((l) => ({ ...l, create: true }));
     const res = await fetch("/api/create-certificates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        token,
-        sheet_name: sheetName,
-        event_name: eventName,
-        temp_folder_id: tempFolderId,
-        slide_template_id: slideTemplateId,
-        sheet_ID: spreadsheetId,
+        token: state.token,
+        sheet_name: state.sheetName,
+        event_name: state.eventName,
+        temp_folder_id: state.tempFolderId,
+        slide_template_id: state.slideTemplateId,
+        sheet_ID: state.spreadsheetId,
         delete_old: true,
       }),
     });
     const result = await res.json();
     setLoading((l) => ({ ...l, create: false }));
     if (!res.ok || result.error) return alert(`❌ ${result.error}`);
+    settotalCreated(totalParticipants);
     alert("✅ Certificates created!");
   };
 
   const handleSend = async () => {
-    if (!loggedIn) return alert("Please authorize with Google first");
+    if (!state.loggedIn) return alert("Please authorize with Google first");
     setLoading((l) => ({ ...l, send: true }));
     const res = await fetch("/api/send-certificates", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        token,
-        sheet_name: sheetName,
-        event_name: eventName,
-        sheet_ID: spreadsheetId,
+        token: state.token,
+        sheet_name: state.sheetName,
+        event_name: state.eventName,
+        sheet_ID: state.spreadsheetId,
       }),
     });
     const result = await res.json();
     setLoading((l) => ({ ...l, send: false }));
     if (!res.ok || result.error) return alert(`❌ ${result.error}`);
+    setTotalSent(totalParticipants);
     alert("✅ Certificates sent!");
   };
 
@@ -304,7 +402,7 @@ export default function CertificateDashboard() {
           </div>
 
           <div>
-            {!loggedIn ? (
+            {!state.loggedIn ? (
               <button
                 style={buttonStyle()}
                 onClick={startAuth}
@@ -385,7 +483,7 @@ export default function CertificateDashboard() {
         </div>
         <div style={{ flex: 1 }}>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>
-            {eventName || "Code Clash 2023"}
+            {state.eventName || "Code Clash 2023"}
           </h2>
           <p
             style={{
@@ -394,16 +492,24 @@ export default function CertificateDashboard() {
               marginTop: "0.25rem",
             }}
           >
-            {sheetName || "Hackathon Event"}
+            {state.sheetName || "Hackathon Event"}
           </p>
         </div>
       </div>
 
       {/* Stats Section */}
       <div style={statGridStyle}>
-        <StatCard title="Total Participants" value="247" icon={Users} />
-        <StatCard title="Certificates Created" value="156" icon={Award} />
-        <StatCard title="Certificates Sent" value="89" icon={Send} />
+        <StatCard
+          title="Total Participants"
+          value={totalParticipants}
+          icon={Users}
+        />
+        <StatCard
+          title="Certificates Created"
+          value={totalCreated}
+          icon={Award}
+        />
+        <StatCard title="Certificates Sent" value={totalSent} icon={Send} />
       </div>
 
       {/* Main Content */}
@@ -476,7 +582,7 @@ export default function CertificateDashboard() {
                   ) && handleCreate()
                 }
                 loading={loading.create}
-                disabled={!loggedIn}
+                disabled={!state.loggedIn}
                 label="Generate Certificates"
                 icon={Award}
               />
@@ -528,7 +634,7 @@ export default function CertificateDashboard() {
                   handleSend()
                 }
                 loading={loading.send}
-                disabled={!loggedIn}
+                disabled={!state.loggedIn}
                 label="Send Certificates"
                 icon={Send}
               />
@@ -536,7 +642,7 @@ export default function CertificateDashboard() {
           </div>
 
           {/* Not Connected Warning */}
-          {!loggedIn && (
+          {!state.loggedIn && (
             <div
               style={{
                 backgroundColor: "#2B1C1C",

@@ -48,7 +48,6 @@ export async function POST(req: NextRequest) {
     );
 
     await Promise.all(deletePromises);
-    console.log(`✅ Deleted ${deletePromises.length} existing certificate(s)`);
   } catch (error) {
     console.error("❌ Failed to delete old certificates:", error);
     return NextResponse.json(
@@ -64,8 +63,6 @@ export async function POST(req: NextRequest) {
     spreadsheetId: SPREADSHEET_ID,
     range: `${SHEET_NAME}!A1:Z`,
   });
-
-  console.log("SHEET DATA:", sheetData.data);
 
   const rows = sheetData.data.values;
   if (!rows) {
@@ -105,8 +102,6 @@ export async function POST(req: NextRequest) {
     const date = row[dateIndex];
     const description = row[descIndex];
 
-    console.log(`Processing row ${i + 1}:`, { name, date, description });
-
     // Copy slide -- being done
     const copy = await drive.files.copy({
       fileId: SLIDE_TEMPLATE_ID,
@@ -116,10 +111,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log("Created file details:", copy);
-
     const slideId = copy.data.id!;
-    // const presentation = await slides.presentations.get({ presentationId: slideId });
 
     // Replace text
     await slides.presentations.batchUpdate({
