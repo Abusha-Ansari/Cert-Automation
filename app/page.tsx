@@ -325,7 +325,11 @@ export default function CertificateDashboard() {
     );
   }
 
-  const startAuth = () => (window.location.href = "/api/auth/start");
+  const startAuth = () => {
+  const currentParams = window.location.search; // gets ?sheet=...&event=...
+  window.location.href = `/api/auth/start${currentParams}`;
+};
+
 
   const handleCreate = async () => {
     if (!state.loggedIn) return alert("Please authorize with Google first");
